@@ -5,3 +5,6 @@
 __author__ = """Dor Amir"""
 __email__ = 'amirdor@gmail.com'
 __version__ = '0.1.0'
+
+from pbq.query import Query
+from pbq.pbq import PBQ
