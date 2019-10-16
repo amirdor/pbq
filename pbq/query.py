@@ -16,7 +16,7 @@ class Query(object):
         :param parameters: dict - key value parameters to change values dynamically inside the query
         """
         self.query = query.replace('"', '\'')
-        self._parameters = parameters if parameters else self._parameters  # parameters is stronger than the json file
+        self._parameters = parameters if parameters else None # parameters is stronger than the json file
         self.client = bigquery.Client()
         self._format()
 
@@ -58,18 +58,19 @@ class Query(object):
         if res is None:
             raise RuntimeError("Query is not valid, please fix your query first")
         price = int(res.total_bytes_billed) / TERA_IN_BYTES * PRICE_PER_TERA
-        return round(price, 3)
+        return round(price, 4)
 
     @lru_cache(1)
     def validate(self):
         """
         validate the query
-        :return:
+        :return: True if the query is runnable
         :raise: RuntimeError - on query error
         """
         res = self._init_query_command()
         if res is None:
             raise RuntimeError("Query is not valid, please fix your query first")
+        return True
 
     @staticmethod
     def read_file(query_file, parameters=None):
