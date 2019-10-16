@@ -5,3 +5,4 @@ pbq
    :maxdepth: 4
 
    pbq
+   query

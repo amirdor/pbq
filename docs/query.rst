@@ -1,5 +1,5 @@
-PBQ
+Query
 ===========
-.. autoclass:: pbq.PBQ
+.. autoclass:: pbq.Query
    :members:
    :inherited-members:

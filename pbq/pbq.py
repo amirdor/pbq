@@ -57,24 +57,31 @@ class PBQ(object):
     Examples
     ------
     getting query to dataframe
+
     >>> from pbq import Query, PBQ
     >>> query = Query("select * from table")
-    >>>  print("the query price:", query.price)
+
+    >>> print("the query price:", query.price)
+
     >>> if not query.validate():
-    >>>     raise RuntimeError()
+    >>>     raise RuntimeError("table not valid")
+
     >>> pbq = PBQ(query)
     >>> pbq.to_dataframe()
 
     saving query to csv
+
     >>> from pbq import Query, PBQ
     >>> query = Query("select * from table")
     >>> pbq = PBQ(query)
     >>> pbq.to_csv()
 
     saving dataframe to table
+
     >>> import pandas as pd
     >>> from pbq import Query, PBQ
     >>> df = pd.DataFrame()
+
     >>> PBQ.save_dataframe_to_table(df, 'table', 'dataset', 'project_id', partition='20191013', replace=False)
     """
 
@@ -98,9 +105,15 @@ class PBQ(object):
         - table
         - dataset
         it will save to the same project
-        :param save_query: boolean - if to save the query to a table also
-        :param params: when `save_query` flag is on you need to give the relevant params
-        :return: pd.DataFrame with the query results
+
+        :param save_query: boolean
+            if to save the query to a table also
+
+        :param params: dict
+            when `save_query` flag is on you need to give the relevant params
+
+        :return: pd.DataFrame
+         the query results
         """
         job_config = bigquery.QueryJobConfig()
         if save_query:
@@ -120,10 +133,18 @@ class PBQ(object):
         - table
         - dataset
         it will save to the same project
-        :param filename: str - with the path to save the file
-        :param sep: str separator to the csv file
-        :param save_query: boolean - if to save the query to a table also
-        :param params: when `save_query` flag is on you need to give the relevant params
+
+        :param filename: str
+            with the path to save the file
+
+        :param sep: str
+            separator to the csv file
+
+        :param save_query: boolean
+            if to save the query to a table also
+
+        :param params: dict
+            when `save_query` flag is on you need to give the relevant params
         """
         df = self.to_dataframe(save_query, **params)
         df.to_csv(filename, sep=sep, index=False)
@@ -131,11 +152,21 @@ class PBQ(object):
     def save_to_table(self, table, dataset, project=None, replace=True, partition=None):
         """
         save query to table
-        :param table: str - table name
-        :param dataset: str - data set name
-        :param project: str - project name
-        :param replace: if set as true -  it will replace the table, else append to table (default: True)
-        :param partition: str - partition format DDMMYYY (default: None)
+
+        :param table: str
+            table name
+
+        :param dataset: str
+            data set name
+
+        :param project: str
+            project name
+
+        :param replace: boolean
+            if set as true -  it will replace the table, else append to table (default: True)
+
+        :param partition: str
+            partition format DDMMYYY (default: None)
         """
         job_config = bigquery.QueryJobConfig()
         # Set the destination table
@@ -182,15 +213,29 @@ class PBQ(object):
         save file to table, it can be partitioned and it can append to existing table.
         the supported formats are CSV or PARQUET
 
-        :param filename: str - with the path to save the file
-        :param table: str - table name
-        :param dataset: str - data set name
-        :param project: str - project name
-        :param file_format: str - possible file format (CSV, PARQUET) (default: CSV)
-        :param max_bad_records: number of bad records allowed in file (default: 0)
-        :param replace: if set as true -  it will replace the table, else append to table (default: True)
-        :param partition: str - partition format DDMMYYY (default: None)
-        :return:
+        :param filename: str
+            with the path to save the file
+
+        :param table: str
+            table name
+
+        :param dataset: str
+            data set name
+
+        :param project: str
+            project name
+
+        :param file_format: str
+            possible file format (CSV, PARQUET) (default: CSV)
+
+        :param max_bad_records: int
+            number of bad records allowed in file (default: 0)
+
+        :param replace: boolean
+            if set as trueit will replace the table, else append to table (default: True)
+
+        :param partition: str
+            partition format DDMMYYY (default: None)
         """
         client = bigquery.Client(project=project)
 
@@ -220,13 +265,27 @@ class PBQ(object):
                                 partition=None):
         """
         save pd.DataFrame object to table
-        :param df: pd.DataFrame - the dataframe you want to save
-        :param table: str - table name
-        :param dataset: str - data set name
-        :param project: str - project name
-        :param max_bad_records: number of bad records allowed in file (default: 0)
-        :param replace: if set as true -  it will replace the table, else append to table (default: True)
-        :param partition: str - partition format DDMMYYY (default: None)
+
+        :param df: pd.DataFrame
+            the dataframe you want to save
+
+        :param table: str
+            table name
+
+        :param dataset: str
+            data set name
+
+        :param project: str
+            project name
+
+        :param max_bad_records: int
+            number of bad records allowed in file (default: 0)
+
+        :param replace: boolean
+            if set as true -  it will replace the table, else append to table (default: True)
+
+        :param partition: str
+            partition format DDMMYYY (default: None)
         """
         now = datetime.datetime.now()
         random_string = '{}'.format(now.strftime('%y%m%d%H%M%S'))
@@ -243,12 +302,18 @@ class PBQ(object):
     def table_details(self, table, dataset, project):
         """
         return a dict object with some details about the table
-        {'last_modified_time': table.modified, 'num_bytes': table.num_bytes, 'num_rows': table.num_rows,
-               'creation_time': table.created}
-        :param table: str - table name
-        :param dataset: str - data set name
-        :param project: str - project name
-        :return: dict - with some table information like, last_modified_time, num_bytes, num_rows, and creation_time
+
+        :param table: str
+            table name
+
+        :param dataset: str
+            data set name
+
+        :param project: str
+            project name
+
+        :return: dict
+            with some table information like, last_modified_time, num_bytes, num_rows, and creation_time
         """
         dataset_ref = self.client.dataset(dataset, project=project)
         table_ref = dataset_ref.table(table)
@@ -262,9 +327,15 @@ class PBQ(object):
     def table_exists(client: bigquery.Client, table_ref: bigquery.table.TableReference):
         """
         check if table exists - if True - table exists else not exists
+
         :param client: bigquery.Client object
-        :param table_ref: bigquery.table.TableReference object - with the table name and dataset
-        :return: boolean - True if table exists
+
+        :param table_ref: bigquery.table.TableReference object
+            with the table name and dataset
+
+        :return: boolean
+            True if table exists
+            False if table not exists
         """
         try:
             table = client.get_table(table_ref)

@@ -8,15 +8,78 @@ PRICE_PER_TERA = 5.0
 
 
 class Query(object):
+    """this class control the query, validate, read sql files and return the price.
+
+    Attributes
+    ------
+    query : str
+        the query
+    client : Client
+        the client object for bigquery
+
+
+    Methods
+    ------
+    price()
+        return the query price
+
+    validate()
+        validate that the query can run without errors
+
+
+    Static Methods
+    ------
+    read_file(query_file, parameters=None)
+        parse query from file, the query can be with parameters inside the file
+
+
+    Examples
+    ------
+    generate Query object with simple query
+
+    >>> from pbq import Query
+    >>> query = Query("select * from table")
+
+    get query price
+
+    >>> from pbq import Query
+    >>> query = Query("select * from table")
+    >>> print("the query price:", query.price)
+    # the query price: 0.312
+
+    validate query
+
+    >>> from pbq import Query
+    >>> query = Query("select * from table")
+    >>> if not query.validate():
+    >>>     raise RuntimeError("table not valid")
+
+    query with parameters
+
+    >>> from pbq import Query
+    >>> query = Query("select * from table where user_id={user_id}", parameters={'user_id': 123})
+    >>> print(query.query)
+    # select * from table where user_id=123
+
+    read query from file with parameters
+
+    >>> from pbq import Query
+    >>> query = Query.read_file('file_path.sql', parameters={'user_id':123})
+    >>> print(query.query)
+    # select * from table where user_id=123
+
+    """
 
     def __init__(self, query, parameters=None):
         """
-        this class control the query, validate, read sql files and return the price.
-        :param query: str - the query
-        :param parameters: dict - key value parameters to change values dynamically inside the query
+        :param query: str
+            the query
+
+        :param parameters: dict
+            key value parameters to change values dynamically inside the query
         """
         self.query = query.replace('"', '\'')
-        self._parameters = parameters if parameters else None # parameters is stronger than the json file
+        self._parameters = parameters if parameters else None
         self.client = bigquery.Client()
         self._format()
 
@@ -50,9 +113,10 @@ class Query(object):
     @property
     @lru_cache(1)
     def price(self):
-        """
-        check the cost of the query
-        :return: float - the price of the query
+        """check the cost of the query
+
+        :return: float
+            the price of the query
         """
         res = self._init_query_command()
         if res is None:
@@ -62,10 +126,13 @@ class Query(object):
 
     @lru_cache(1)
     def validate(self):
-        """
-        validate the query
-        :return: True if the query is runnable
-        :raise: RuntimeError - on query error
+        """validate the query
+
+        :return: Boolean
+            True if the query is runnable
+
+        :raise: RuntimeError
+            on query error
         """
         res = self._init_query_command()
         if res is None:
@@ -74,10 +141,14 @@ class Query(object):
 
     @staticmethod
     def read_file(query_file, parameters=None):
-        """
-        parse query from file
-        :param query_file: str - path to the query file
-        :param parameters: dict - key value parameters to change values dynamically inside the query
+        """parse query from file
+
+        :param query_file: str
+            path to the query file
+
+        :param parameters: dict
+            key value parameters to change values dynamically inside the query
+
         :return: Query object
         """
         q_file = open(query_file, 'r')
