@@ -79,7 +79,7 @@ class Query(object):
             key value parameters to change values dynamically inside the query
         """
         self.query = query.replace('"', '\'')
-        self._parameters = parameters if parameters else None
+        self._parameters = parameters if parameters else dict()
         self.client = bigquery.Client()
         self._format()
 
