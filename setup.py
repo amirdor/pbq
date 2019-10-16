@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = ['google-api-core==1.14.*', 'google-cloud-bigquery-storage==0.7.*', 'google-cloud-bigquery==1.20.*',
-                'pandas==0.25.*', 'pyarrow==0.14.*', 'fastparquet==0.3.*', 'requests== 2.22.*']
+                'google-cloud-core==1.0.*', 'pandas==0.25.*', 'pyarrow==0.14.*', 'fastparquet==0.3.*', 'requests== 2.22.*']
 
 setup_requirements = requirements
 
