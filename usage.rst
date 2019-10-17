@@ -56,7 +56,7 @@ Download table to pandas DataFrame
    pbq = PBQ(query)
 
    #run the query and get dataframe
-   pbq.to_daaframe()
+   pbq.to_dataframe()
 
 |
 
