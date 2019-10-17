@@ -1,11 +1,11 @@
 PBQ
 ===
 
-![image](https://img.shields.io/pypi/v/pbq.svg%0A%20%20%20%20%20:target:%20https://pypi.python.org/pypi/pbq)
+[![PyPI version](https://badge.fury.io/py/pbq.svg)](https://badge.fury.io/py/pbq)
 
-![image](https://img.shields.io/travis/amirdor/pbq.svg%0A%20%20%20%20%20:target:%20https://travis-ci.org/amirdor/pbq)
+[![Build Status](https://travis-ci.org/amirdor/pbq.svg?branch=master)](https://travis-ci.org/amirdor/pbq)
 
-![image](https://readthedocs.org/projects/pbq/badge/?version=latest%0A%20%20%20%20%20:target:%20https://pbq.readthedocs.io/en/latest/?badge=latest%0A%20%20%20%20%20:alt:%20Documentation%20Status)
+[![Documentation Status](https://readthedocs.org/projects/pbq/badge/?version=latest)](https://pbq.readthedocs.io/en/latest/?badge=latest)
 
 python BiqQuery driver for easy access
 
