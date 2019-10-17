@@ -6,8 +6,8 @@ Import this package to your project and you are ready to go
 
 .. code-block:: python
 
-    from BBQ import BigQueryDriver
-    from BBQ import Query
+    from pbq import PBQ
+    from pbq import Query
 
 
 |

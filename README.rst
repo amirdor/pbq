@@ -25,7 +25,7 @@ To start using this package run:
 
 .. code-block:: bash
 
-   $ pip install bbq
+   $ pip install pbq
 
 
 
