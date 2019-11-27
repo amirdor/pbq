@@ -70,17 +70,23 @@ class Query(object):
 
     """
 
-    def __init__(self, query, parameters=None):
+    def __init__(self, query, parameters=None, project=None):
         """
         :param query: str
             the query
 
         :param parameters: dict
             key value parameters to change values dynamically inside the query
+
+        :param project: str
+            the BQ project
         """
         self.query = query.replace('"', '\'')
         self._parameters = parameters if parameters else dict()
-        self.client = bigquery.Client()
+        if project:
+            self.client = bigquery.Client(project=project)
+        else:
+            self.client = bigquery.Client()
         self._format()
 
     def _format(self):
@@ -140,7 +146,7 @@ class Query(object):
         return True
 
     @staticmethod
-    def read_file(query_file, parameters=None):
+    def read_file(query_file, parameters=None, project=None):
         """parse query from file
 
         :param query_file: str
@@ -153,7 +159,7 @@ class Query(object):
         """
         q_file = open(query_file, 'r')
         _query = q_file.read()
-        return Query(_query, parameters)
+        return Query(_query, parameters, project=project)
 
     @lru_cache(1)
     def _init_query_command(self):

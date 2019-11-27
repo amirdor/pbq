@@ -85,16 +85,21 @@ class PBQ(object):
     >>> PBQ.save_dataframe_to_table(df, 'table', 'dataset', 'project_id', partition='20191013', replace=False)
     """
 
-    def __init__(self, query: Query):
+    def __init__(self, query: Query, project=None):
         """
         bigquery driver using the google official API
         :param query: Query object
-
-
+        
+        :param project: str
+            the BQ project
         """
         self.query = query.query
         self.query_obj = query
-        self.client = bigquery.Client()
+        self.project = project
+        if project:
+            self.client = bigquery.Client(project=project)
+        else:
+            self.client = bigquery.Client()
         self.bqstorage_client = bigquery_storage_v1beta1.BigQueryStorageClient()
 
     def to_dataframe(self, save_query=False, **params):
