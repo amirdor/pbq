@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Main module."""
+import os
 from google.cloud import bigquery
 from pbq.query import Query
 from google.cloud import bigquery_storage_v1beta1
@@ -259,11 +260,21 @@ class PBQ(object):
 
         PBQ._create_table(client, exists_ok, partition, replace, table_ref)
 
-        with open(filename, "rb") as source_file:
-            job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
-
-        job.result()  # Waits for table load to complete.
-        print("Loaded {} rows into {}:{}.".format(job.output_rows, dataset, table))
+        if not partition:
+            with open(filename, "rb") as source_file:
+                job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
+                
+            job.result()  # Waits for table load to complete.
+            print("Loaded {} rows into {}:{}.".format(job.output_rows, dataset, table))
+        else:
+            print('fallback loading by CMD command due to missing api feature for partition')
+            cmd = "bq load"
+            if replace:
+                cmd = "{} --replace".format(cmd)
+            cmd = "{cmd} --source_format={file_format}  '{project}:{dataset}.{tbl_name}' {filename}". \
+                format(cmd=cmd, tbl_name=table, filename=filename, project=project, dataset=dataset, 
+                       file_format=file_format)
+            os.system(cmd)
 
     @staticmethod
     def save_dataframe_to_table(df: pd.DataFrame, table, dataset, project, max_bad_records=0, replace=True,
