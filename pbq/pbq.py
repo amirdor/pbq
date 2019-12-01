@@ -6,6 +6,7 @@ from google.cloud import bigquery
 from pbq.query import Query
 from google.cloud import bigquery_storage_v1beta1
 from google.cloud.exceptions import NotFound
+from google.api_core.exceptions import BadRequest
 import pandas as pd
 import datetime
 
@@ -90,7 +91,7 @@ class PBQ(object):
         """
         bigquery driver using the google official API
         :param query: Query object
-        
+
         :param project: str
             the BQ project
         """
@@ -246,9 +247,7 @@ class PBQ(object):
         client = bigquery.Client(project=project)
 
         dataset_ref = client.dataset(dataset)
-        if partition:
-            table = '{0}${1}'.format(table, partition)
-        table_ref = dataset_ref.table(table.split('$')[0])
+        table_ref = dataset_ref.table(table)
         job_config = bigquery.LoadJobConfig()
         job_config.max_bad_records = max_bad_records
         job_config.source_format = file_format
@@ -257,28 +256,28 @@ class PBQ(object):
         if file_format == bigquery.SourceFormat.CSV:
             job_config.skip_leading_rows = 1
         job_config.autodetect = True
-
         PBQ._create_table(client, exists_ok, partition, replace, table_ref)
 
         if not partition:
             with open(filename, "rb") as source_file:
                 job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
-                
+
             job.result()  # Waits for table load to complete.
             print("Loaded {} rows into {}:{}.".format(job.output_rows, dataset, table))
         else:
             print('fallback loading by CMD command due to missing api feature for partition')
+            table = '{0}${1}'.format(table, partition)
             cmd = "bq load"
             if replace:
                 cmd = "{} --replace".format(cmd)
             cmd = "{cmd} --source_format={file_format}  '{project}:{dataset}.{tbl_name}' {filename}". \
-                format(cmd=cmd, tbl_name=table, filename=filename, project=project, dataset=dataset, 
+                format(cmd=cmd, tbl_name=table, filename=filename, project=project, dataset=dataset,
                        file_format=file_format)
             os.system(cmd)
 
     @staticmethod
     def save_dataframe_to_table(df: pd.DataFrame, table, dataset, project, max_bad_records=0, replace=True,
-                                partition=None):
+                                partition=None, validate_params=False):
         """
         save pd.DataFrame object to table
 
@@ -302,20 +301,43 @@ class PBQ(object):
 
         :param partition: str
             partition format DDMMYYY (default: None)
+
+        :param validate_params: boolean
+            validate the schema of the table to the dataframe object (default: False)
         """
         now = datetime.datetime.now()
+
         random_string = '{}'.format(now.strftime('%y%m%d%H%M%S'))
         input_path = "/tmp/tmp-{}.parquet".format(random_string)
-        PBQ._save_df_to_parquet(df, input_path)
+        schema = None
+
+        if validate_params:  # because of the fallback it need to change to be as the schema
+            table_details = PBQ.table_details(table, dataset, project)
+            if 'schema' in table_details:
+                schema = table_details['schema']
+
+        PBQ._save_df_to_parquet(df, input_path, schema=schema)
         PBQ.save_file_to_table(input_path, table, dataset, project, file_format=bigquery.SourceFormat.PARQUET,
                                max_bad_records=max_bad_records, replace=replace, partition=partition)
 
     @staticmethod
-    def _save_df_to_parquet(df, input_path, index=False):
+    def _save_df_to_parquet(df, input_path, index=False, schema=None):
+        if schema:
+            for s in schema:
+                if s['field_type'] == 'STRING':
+                    s['field_type'] = 'str'
+                if s['field_type'] == 'INTEGER':
+                    s['field_type'] = 'int'
+                if s['field_type'] == 'TIMESTAMP':
+                    df[s['column']] = pd.to_datetime(df[s['column']], errors='coerce')
+                    continue
+                df[s['column']] = df[s['column']].astype(s['field_type'].lower())
+
         df.columns = ["{}".format(col) for col in df.columns]
         df.to_parquet(input_path, index=index)
 
-    def table_details(self, table, dataset, project):
+    @staticmethod
+    def table_details(table, dataset, project):
         """
         return a dict object with some details about the table
 
@@ -331,12 +353,19 @@ class PBQ(object):
         :return: dict
             with some table information like, last_modified_time, num_bytes, num_rows, and creation_time
         """
-        dataset_ref = self.client.dataset(dataset, project=project)
+        client = bigquery.Client(project=project)
+        dataset_ref = client.dataset(dataset, project=project)
         table_ref = dataset_ref.table(table)
-        table = self.client.get_table(table_ref)
+        table = client.get_table(table_ref)
+        if table is None:
+            return {}
+
+        schema = []
+        for s in table.schema:
+            schema.append({'column': s.name, 'field_type': s.field_type})
 
         res = {'last_modified_time': table.modified, 'num_bytes': table.num_bytes, 'num_rows': table.num_rows,
-               'creation_time': table.created}
+               'creation_time': table.created, 'schema': schema}
         return res
 
     @staticmethod
@@ -359,3 +388,5 @@ class PBQ(object):
                 return True
         except NotFound as error:
             return False
+        except BadRequest as error:
+            return True
