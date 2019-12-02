@@ -326,13 +326,19 @@ class PBQ(object):
             for s in schema:
                 if s['field_type'] == 'STRING':
                     s['field_type'] = 'str'
+
                 if s['field_type'] == 'INTEGER':
                     s['field_type'] = 'int'
-                if s['field_type'] == 'TIMESTAMP':
+
+                if s['field_type']  == 'TIMESTAMP':
                     df[s['column']] = pd.to_datetime(df[s['column']], errors='coerce')
                     continue
-                df[s['column']] = df[s['column']].astype(s['field_type'].lower())
-
+                
+                if s['field_type'] == 'DATE':
+                    df[s['column']] = pd.to_datetime(df[s['column']], errors='coerce')
+                    df[s['column']] = df[s['column']].dt.date
+                    continue
+                
         df.columns = ["{}".format(col) for col in df.columns]
         df.to_parquet(input_path, index=index)
 
@@ -356,8 +362,9 @@ class PBQ(object):
         client = bigquery.Client(project=project)
         dataset_ref = client.dataset(dataset, project=project)
         table_ref = dataset_ref.table(table)
-        table = client.get_table(table_ref)
-        if table is None:
+        try:
+            table = client.get_table(table_ref)
+        except NotFound as error:
             return {}
 
         schema = []
