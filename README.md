@@ -111,6 +111,22 @@ pbq = PBQ(query)
 pbq.to_dataframe()
 ```
 
+#### Simply run your query 
+
+``` python
+from pbq import PBQ
+from pbq import Query
+
+# read sql file and format the query from file to string without parameters
+query = Query.read_file('queries/query.sql')
+
+# init the query builder
+pbq = PBQ(query)
+
+#run the query if you want to write insert query or alter table for example.
+pbq.run_query()
+```
+
 
 #### Save query to a table
 

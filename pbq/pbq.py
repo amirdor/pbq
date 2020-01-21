@@ -37,6 +37,9 @@ class PBQ(object):
     save_to_table(table, dataset, project=None, replace=True, partition=None)
         save query to table
 
+    run_query()
+        simply execute your query
+
     table_details(table, dataset, project)
         get the information about the table
 
@@ -155,6 +158,19 @@ class PBQ(object):
         """
         df = self.to_dataframe(save_query, **params)
         df.to_csv(filename, sep=sep, index=False)
+
+    def run_query(self):
+        """
+        execute your query
+
+        """
+        # Set the destination table
+        client = self.client
+
+        query_job = client.query(self.query)
+        query_job.result()
+        print('Done running your amazing query')
+
 
     def save_to_table(self, table, dataset, project=None, replace=True, partition=None):
         """
